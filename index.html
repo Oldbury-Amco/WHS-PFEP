@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automotive PFEP Master</title>
+  <style>
+    :root { --ink:#17212B; --accent:#006A71; --warn:#C44536; --bg:#F4F6F8; --line:#D7DCE1; --muted:#5B6773; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg); color:var(--ink); }
+    header { padding:28px 36px; background:var(--ink); color:white; display:flex; justify-content:space-between; gap:24px; align-items:flex-end; }
+    h1 { margin:0; font-size:32px; }
+    .sub { color:#C7D0D8; margin-top:8px; }
+    main { max-width:1440px; margin:0 auto; padding:28px 36px 44px; }
+    .kpis { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:14px; margin-bottom:18px; }
+    .card, section { background:white; border:1px solid var(--line); border-radius:8px; }
+    .card { padding:16px; }
+    .label { color:var(--muted); font-size:13px; margin-bottom:8px; }
+    .value { font-size:28px; font-weight:700; }
+    .grid { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; }
+    section { padding:18px; margin-bottom:18px; }
+    h2 { margin:0 0 14px; font-size:18px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th,td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
+    th { color:var(--muted); background:#F8FAFB; }
+    .bar { height:10px; background:#E7EBEF; border-radius:999px; overflow:hidden; min-width:80px; }
+    .bar span { display:block; height:100%; background:var(--accent); }
+    .bar.warn span { background:var(--warn); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+    .button { display:inline-block; border:1px solid var(--accent); background:var(--accent); color:white; padding:10px 12px; border-radius:6px; text-decoration:none; font-size:13px; cursor:pointer; }
+    .button.secondary { background:white; color:var(--accent); }
+    .note { color:var(--muted); font-size:13px; line-height:1.45; }
+    @media (max-width:1000px) { header,.grid { display:block; } .kpis { grid-template-columns:1fr 1fr; } main { padding:18px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>Automotive PFEP Master</h1><div class="sub">PFEP control centre for plants 4121, 4122, 4123 and 4124</div></div>
+    <div>Generated 2026-05-07T08:44:39</div>
+  </header>
+  <main>
+    <div class="kpis">
+      <div class="card"><div class="label">Material-Plant Records</div><div class="value" id="kpi-records">34,815</div></div>
+      <div class="card"><div class="label">Avg SAP Completeness</div><div class="value" id="kpi-sap">78%</div></div>
+      <div class="card"><div class="label">Avg Overall Completeness</div><div class="value" id="kpi-overall">54%</div></div>
+      <div class="card"><div class="label">Ready for PFEP Design</div><div class="value" id="kpi-ready">2,645</div></div>
+      <div class="card"><div class="label">Manual Rows Applied</div><div class="value" id="kpi-manual">0</div></div>
+    </div>
+    <div class="grid">
+      <section>
+        <h2>Completeness by Plant</h2>
+        <table><thead><tr><th>Plant</th><th>Records</th><th>SAP Complete</th><th>Overall</th><th>Ready</th></tr></thead><tbody>
+        <tr><td>4121</td><td>12,228</td><td><div class="bar"><span style="width:78%"></span></div> 78%</td><td>53%</td><td>883</td></tr><tr><td>4122</td><td>13,251</td><td><div class="bar"><span style="width:78%"></span></div> 78%</td><td>54%</td><td>1,142</td></tr><tr><td>4123</td><td>6,368</td><td><div class="bar"><span style="width:79%"></span></div> 79%</td><td>54%</td><td>213</td></tr><tr><td>4124</td><td>2,968</td><td><div class="bar"><span style="width:79%"></span></div> 79%</td><td>54%</td><td>407</td></tr>
+        </tbody></table>
+      </section>
+      <section>
+        <h2>Largest Remaining Field Gaps</h2>
+        <table><thead><tr><th>Field</th><th>Missing</th><th>Complete</th></tr></thead><tbody>
+        <tr><td>Point of Use</td><td>34,815</td><td><div class="bar warn"><span style="width:0%"></span></div> 0%</td></tr><tr><td>Line Side Location</td><td>34,815</td><td><div class="bar warn"><span style="width:0%"></span></div> 0%</td></tr><tr><td>Packaging Type</td><td>34,815</td><td><div class="bar warn"><span style="width:0%"></span></div> 0%</td></tr><tr><td>Container Qty</td><td>34,815</td><td><div class="bar warn"><span style="width:0%"></span></div> 0%</td></tr><tr><td>Replenishment Method</td><td>34,815</td><td><div class="bar warn"><span style="width:0%"></span></div> 0%</td></tr><tr><td>PFEP Owner</td><td>34,815</td><td><div class="bar warn"><span style="width:0%"></span></div> 0%</td></tr><tr><td>MOQ</td><td>33,252</td><td><div class="bar warn"><span style="width:4%"></span></div> 4%</td></tr><tr><td>Vendor</td><td>32,167</td><td><div class="bar warn"><span style="width:8%"></span></div> 8%</td></tr><tr><td>Order UoM</td><td>30,937</td><td><div class="bar warn"><span style="width:11%"></span></div> 11%</td></tr><tr><td>Main Storage Location</td><td>415</td><td><div class="bar warn"><span style="width:99%"></span></div> 99%</td></tr>
+        </tbody></table>
+      </section>
+    </div>
+    <section>
+      <h2>Refresh Routine</h2>
+      <p class="note">Save manual enrichment files in <strong>manual_data</strong>, run <strong>Refresh_PFEP.bat</strong>, then publish the contents of <strong>published</strong> to GitHub Pages. The dashboard is static and GitHub-friendly; each refresh rewrites this page and the workbook.</p>
+      <div class="actions">
+        <button class="button" onclick="refreshData()">Refresh dashboard data</button>
+        <a class="button secondary" href="Automotive_PFEP_Master.xlsx">Download PFEP workbook</a>
+      </div>
+    </section>
+  </main>
+  <script>
+    const fallbackData = {"generated_at": "2026-05-07T08:44:39", "total_records": 34815, "avg_sap_completeness": 0.7845334740772655, "avg_overall_completeness": 0.5367878730432284, "ready_for_pfep_design": 2645, "manual_rows_applied": 0, "plants": [{"Plant": "4121", "Materials": 12228, "Avg SAP Completeness": 0.781822620215898, "Avg Overall Completeness": 0.5349358439646712, "Missing Vendor": 11343, "Missing Storage Location": 195, "Missing Lead Time": 0, "Missing MOQ": 11546, "Ready for PFEP Design": 883}, {"Plant": "4122", "Materials": 13251, "Avg SAP Completeness": 0.7835200815032828, "Avg Overall Completeness": 0.5360966417628859, "Missing Vendor": 12108, "Missing Storage Location": 195, "Missing Lead Time": 0, "Missing MOQ": 12541, "Ready for PFEP Design": 1142}, {"Plant": "4123", "Materials": 6368, "Avg SAP Completeness": 0.7888921325376884, "Avg Overall Completeness": 0.5397589510050251, "Missing Vendor": 6155, "Missing Storage Location": 25, "Missing Lead Time": 0, "Missing MOQ": 6204, "Ready for PFEP Design": 213}, {"Plant": "4124", "Materials": 2968, "Avg SAP Completeness": 0.7908747304582211, "Avg Overall Completeness": 0.5411296159029649, "Missing Vendor": 2561, "Missing Storage Location": 0, "Missing Lead Time": 0, "Missing MOQ": 2961, "Ready for PFEP Design": 407}], "field_gaps": [{"Field": "Point of Use", "Complete": 0, "Missing": 34815, "Completeness": 0.0}, {"Field": "Line Side Location", "Complete": 0, "Missing": 34815, "Completeness": 0.0}, {"Field": "Packaging Type", "Complete": 0, "Missing": 34815, "Completeness": 0.0}, {"Field": "Container Qty", "Complete": 0, "Missing": 34815, "Completeness": 0.0}, {"Field": "Replenishment Method", "Complete": 0, "Missing": 34815, "Completeness": 0.0}, {"Field": "PFEP Owner", "Complete": 0, "Missing": 34815, "Completeness": 0.0}, {"Field": "MOQ", "Complete": 1563, "Missing": 33252, "Completeness": 0.04489444205084016}, {"Field": "Vendor", "Complete": 2648, "Missing": 32167, "Completeness": 0.07605916989803246}, {"Field": "Order UoM", "Complete": 3878, "Missing": 30937, "Completeness": 0.11138876920867442}, {"Field": "Main Storage Location", "Complete": 34400, "Missing": 415, "Completeness": 0.9880798506390923}]};
+    const fmt = new Intl.NumberFormat("en-GB");
+    const pctText = value => `${Math.round(Number(value || 0) * 100)}%`;
+    async function refreshData() {
+      try {
+        const response = await fetch(`dashboard_data.json?ts=${Date.now()}`, { cache: "no-store" });
+        const data = response.ok ? await response.json() : fallbackData;
+        document.getElementById("kpi-records").textContent = fmt.format(data.total_records);
+        document.getElementById("kpi-sap").textContent = pctText(data.avg_sap_completeness);
+        document.getElementById("kpi-overall").textContent = pctText(data.avg_overall_completeness);
+        document.getElementById("kpi-ready").textContent = fmt.format(data.ready_for_pfep_design);
+        document.getElementById("kpi-manual").textContent = fmt.format(data.manual_rows_applied);
+      } catch (error) {
+        console.warn("Dashboard data refresh unavailable from this location.", error);
+      }
+    }
+  </script>
+</body>
+</html>

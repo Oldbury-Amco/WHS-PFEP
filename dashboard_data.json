@@ -1,0 +1,116 @@
+{
+  "generated_at": "2026-05-07T08:44:39",
+  "total_records": 34815,
+  "avg_sap_completeness": 0.7845334740772655,
+  "avg_overall_completeness": 0.5367878730432284,
+  "ready_for_pfep_design": 2645,
+  "manual_rows_applied": 0,
+  "plants": [
+    {
+      "Plant": "4121",
+      "Materials": 12228,
+      "Avg SAP Completeness": 0.781822620215898,
+      "Avg Overall Completeness": 0.5349358439646712,
+      "Missing Vendor": 11343,
+      "Missing Storage Location": 195,
+      "Missing Lead Time": 0,
+      "Missing MOQ": 11546,
+      "Ready for PFEP Design": 883
+    },
+    {
+      "Plant": "4122",
+      "Materials": 13251,
+      "Avg SAP Completeness": 0.7835200815032828,
+      "Avg Overall Completeness": 0.5360966417628859,
+      "Missing Vendor": 12108,
+      "Missing Storage Location": 195,
+      "Missing Lead Time": 0,
+      "Missing MOQ": 12541,
+      "Ready for PFEP Design": 1142
+    },
+    {
+      "Plant": "4123",
+      "Materials": 6368,
+      "Avg SAP Completeness": 0.7888921325376884,
+      "Avg Overall Completeness": 0.5397589510050251,
+      "Missing Vendor": 6155,
+      "Missing Storage Location": 25,
+      "Missing Lead Time": 0,
+      "Missing MOQ": 6204,
+      "Ready for PFEP Design": 213
+    },
+    {
+      "Plant": "4124",
+      "Materials": 2968,
+      "Avg SAP Completeness": 0.7908747304582211,
+      "Avg Overall Completeness": 0.5411296159029649,
+      "Missing Vendor": 2561,
+      "Missing Storage Location": 0,
+      "Missing Lead Time": 0,
+      "Missing MOQ": 2961,
+      "Ready for PFEP Design": 407
+    }
+  ],
+  "field_gaps": [
+    {
+      "Field": "Point of Use",
+      "Complete": 0,
+      "Missing": 34815,
+      "Completeness": 0.0
+    },
+    {
+      "Field": "Line Side Location",
+      "Complete": 0,
+      "Missing": 34815,
+      "Completeness": 0.0
+    },
+    {
+      "Field": "Packaging Type",
+      "Complete": 0,
+      "Missing": 34815,
+      "Completeness": 0.0
+    },
+    {
+      "Field": "Container Qty",
+      "Complete": 0,
+      "Missing": 34815,
+      "Completeness": 0.0
+    },
+    {
+      "Field": "Replenishment Method",
+      "Complete": 0,
+      "Missing": 34815,
+      "Completeness": 0.0
+    },
+    {
+      "Field": "PFEP Owner",
+      "Complete": 0,
+      "Missing": 34815,
+      "Completeness": 0.0
+    },
+    {
+      "Field": "MOQ",
+      "Complete": 1563,
+      "Missing": 33252,
+      "Completeness": 0.04489444205084016
+    },
+    {
+      "Field": "Vendor",
+      "Complete": 2648,
+      "Missing": 32167,
+      "Completeness": 0.07605916989803246
+    },
+    {
+      "Field": "Order UoM",
+      "Complete": 3878,
+      "Missing": 30937,
+      "Completeness": 0.11138876920867442
+    },
+    {
+      "Field": "Main Storage Location",
+      "Complete": 34400,
+      "Missing": 415,
+      "Completeness": 0.9880798506390923
+    }
+  ]
+}
