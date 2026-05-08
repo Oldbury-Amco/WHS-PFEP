@@ -24,7 +24,7 @@
     <div class="brand">
       <img class="whs" src="assets/whs-plastics-logo.svg" alt="WHS Plastics">
       <div class="divider"></div>
-      <img class="amco" src="assets/amco-logo.svg" alt="AMCO">
+      <img class="amco" src="amco-logo.png" alt="AMCO">
       <div class="title"><h1>WHS PFEP Master</h1><p>Static view of refreshed PFEP data for plants 4121, 4122, 4123 and 4124</p></div>
     </div>
     <div class="actions">
@@ -63,33 +63,64 @@
   </div>
 </main>
 <script>
-const state={data:null,filtered:[],page:1,plant:''};
+const state={meta:null,recordsByPlant:{},filtered:[],page:1,plant:'4123'};
 const fmt=new Intl.NumberFormat('en-GB');
 const cols=['Material','Plant','Part Description','Material Type','Material Type Description','Material Group','Material Group Description','Base UoM','MRP Type','Procurement type','Storage Locations','Vendor','Supplier Name','Procurement Plant','Safety stock','Reorder Point','Packaging Type','Container Qty','Replenishment Method','PFEP Owner','_Completeness'];
-const el=id=>document.getElementById(id); const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const el=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 function pct(v){return `${Math.round((Number(v)||0)*100)}%`}
 function dot(v){v=Number(v)||0; return `<span class="dot ${v<.5?'red':v<.75?'amber':''}"></span>${pct(v)}`}
 async function init(){
-  const res=await fetch(`data/pfep_data.json?ts=${Date.now()}`,{cache:'no-store'});
-  if(!res.ok) throw new Error(`PFEP data file not found: ${res.status}`);
-  state.data=await res.json();
-  hydrate();
+  const res=await fetch(`data/pfep_meta.json?ts=${Date.now()}`,{cache:'no-store'});
+  if(!res.ok) throw new Error(`PFEP metadata not found: ${res.status}`);
+  state.meta=await res.json();
+  hydrateMeta();
+  await selectPlant('4123');
+}
+function hydrateMeta(){
+  const d=state.meta;
+  el('kpiRecords').textContent=fmt.format(d.total_records);
+  el('kpiPlants').textContent=d.plants.length;
+  el('kpiGenerated').textContent=d.generated_at;
+  el('plantButtons').innerHTML=['',...d.plants].map(p=>`<button data-plant="${esc(p)}" class="${p===state.plant?'active':''}">${p||'All'}</button>`).join('');
+  el('plantButtons').onclick=e=>{if(e.target.tagName==='BUTTON') selectPlant(e.target.dataset.plant)};
+  fillSelect('matType',d.material_types); fillSelect('matGroup',d.material_groups); fillSelect('supplier',d.suppliers);
+  el('plantSummary').innerHTML=d.plant_summary.map(p=>`<div class="mini-row"><span>${p.Plant}</span><strong>${fmt.format(p.Records)}</strong></div><div class="bar"><span style="width:${Math.round(p.Completeness*100)}%"></span></div>`).join('');
+  el('gapSummary').innerHTML=d.field_gaps.map(g=>`<div class="mini-row"><span>${esc(g.Field)}</span><strong>${fmt.format(g.Missing)}</strong></div><div class="bar warn"><span style="width:${Math.round(g.Completeness*100)}%"></span></div>`).join('');
+  ['search','matType','matGroup','supplier','minComp','pageSize'].forEach(id=>el(id).addEventListener('input',()=>{state.page=1;applyFilters();}));
+  el('resetBtn').onclick=reset; el('prevBtn').onclick=()=>{if(state.page>1){state.page--;render();}}; el('nextBtn').onclick=()=>{const pages=Math.ceil(state.filtered.length/Number(el('pageSize').value)); if(state.page<pages){state.page++;render();}}; el('csvBtn').onclick=downloadCsv; el('fullCsvBtn').onclick=downloadFullCsv;
+}
+async function loadPlant(plant){
+  if(state.recordsByPlant[plant]) return state.recordsByPlant[plant];
+  const file=state.meta.plant_files[plant];
+  const res=await fetch(`${file}?ts=${Date.now()}`,{cache:'no-store'});
+  if(!res.ok) throw new Error(`PFEP plant data not found for ${plant}: ${res.status}`);
+  const data=await res.json();
+  state.recordsByPlant[plant]=data.records || [];
+  return state.recordsByPlant[plant];
+}
+async function selectPlant(plant){
+  state.plant=plant; state.page=1;
+  [...el('plantButtons').children].forEach(b=>b.classList.toggle('active',b.dataset.plant===plant));
+  el('tableMeta').textContent=plant?`Loading plant ${plant}...`:'Loading all plants...';
+  if(plant){await loadPlant(plant);} else {for(const p of state.meta.plants) await loadPlant(p);}
   applyFilters();
 }
-function hydrate(){const d=state.data; el('kpiRecords').textContent=fmt.format(d.total_records); el('kpiPlants').textContent=d.plants.length; el('kpiGenerated').textContent=d.generated_at; el('plantButtons').innerHTML=['',...d.plants].map(p=>`<button data-plant="${esc(p)}" class="${p===''?'active':''}">${p||'All'}</button>`).join(''); el('plantButtons').onclick=e=>{if(e.target.tagName==='BUTTON'){state.plant=e.target.dataset.plant; [...el('plantButtons').children].forEach(b=>b.classList.toggle('active',b===e.target)); state.page=1; applyFilters();}}; fillSelect('matType',d.material_types); fillSelect('matGroup',d.material_groups); fillSelect('supplier',d.suppliers); el('plantSummary').innerHTML=d.plant_summary.map(p=>`<div class="mini-row"><span>${p.Plant}</span><strong>${fmt.format(p.Records)}</strong></div><div class="bar"><span style="width:${Math.round(p.Completeness*100)}%"></span></div>`).join(''); el('gapSummary').innerHTML=d.field_gaps.map(g=>`<div class="mini-row"><span>${esc(g.Field)}</span><strong>${fmt.format(g.Missing)}</strong></div><div class="bar warn"><span style="width:${Math.round(g.Completeness*100)}%"></span></div>`).join(''); ['search','matType','matGroup','supplier','minComp','pageSize'].forEach(id=>el(id).addEventListener('input',()=>{state.page=1;applyFilters();})); el('resetBtn').onclick=reset; el('prevBtn').onclick=()=>{if(state.page>1){state.page--;render();}}; el('nextBtn').onclick=()=>{const pages=Math.ceil(state.filtered.length/Number(el('pageSize').value)); if(state.page<pages){state.page++;render();}}; el('csvBtn').onclick=downloadCsv; el('fullCsvBtn').onclick=downloadFullCsv;}
+function activeRecords(){return state.plant ? (state.recordsByPlant[state.plant]||[]) : state.meta.plants.flatMap(p=>state.recordsByPlant[p]||[])}
 function fillSelect(id,items){const s=el(id); items.forEach(x=>{const o=document.createElement('option'); o.value=x; o.textContent=x; s.appendChild(o);});}
-function applyFilters(){const q=el('search').value.trim().toLowerCase(), mt=el('matType').value, mg=el('matGroup').value, sup=el('supplier').value, min=Number(el('minComp').value); state.filtered=state.data.records.filter(r=>{if(state.plant&&String(r.Plant)!==state.plant)return false; if(mt&&r['Material Type']!==mt)return false; if(mg&&r['Material Group']!==mg)return false; if(sup&&r['Supplier Name']!==sup)return false; if(Number(r._Completeness||0)<min)return false; if(q){const hay=[r.Material,r['Part Description'],r['Supplier Name'],r['Material Group Description']].join(' ').toLowerCase(); if(!hay.includes(q))return false;} return true;}); render();}
-function render(){const size=Number(el('pageSize').value), start=(state.page-1)*size, rows=state.filtered.slice(start,start+size), pages=Math.max(1,Math.ceil(state.filtered.length/size)); const avg=state.filtered.reduce((s,r)=>s+Number(r._Completeness||0),0)/(state.filtered.length||1); el('kpiVisible').textContent=fmt.format(state.filtered.length); el('kpiComplete').textContent=pct(avg); el('tableMeta').textContent=`Showing ${fmt.format(start+1)}-${fmt.format(Math.min(start+size,state.filtered.length))} of ${fmt.format(state.filtered.length)}`; el('pageInfo').textContent=`Page ${state.page} of ${pages}`; el('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c==='_Completeness'?'Completeness':esc(c)}</th>`).join('')+'</tr>'; el('tbody').innerHTML=rows.map(r=>'<tr>'+cols.map(c=>`<td class="${c==='Material'?'material':''}">${c==='_Completeness'?'<span class="score">'+dot(r[c])+'</span>':esc(r[c])}</td>`).join('')+'</tr>').join('');}
-function reset(){['search','matType','matGroup','supplier'].forEach(id=>el(id).value=''); el('minComp').value='0'; state.plant=''; [...el('plantButtons').children].forEach((b,i)=>b.classList.toggle('active',i===0)); state.page=1; applyFilters();}
+function applyFilters(){const q=el('search').value.trim().toLowerCase(), mt=el('matType').value, mg=el('matGroup').value, sup=el('supplier').value, min=Number(el('minComp').value); state.filtered=activeRecords().filter(r=>{if(mt&&r['Material Type']!==mt)return false; if(mg&&r['Material Group']!==mg)return false; if(sup&&r['Supplier Name']!==sup)return false; if(Number(r._Completeness||0)<min)return false; if(q){const hay=[r.Material,r['Part Description'],r['Supplier Name'],r['Material Group Description']].join(' ').toLowerCase(); if(!hay.includes(q))return false;} return true;}); render();}
+function render(){const size=Number(el('pageSize').value), start=(state.page-1)*size, rows=state.filtered.slice(start,start+size), pages=Math.max(1,Math.ceil(state.filtered.length/size)); const avg=state.filtered.reduce((s,r)=>s+Number(r._Completeness||0),0)/(state.filtered.length||1); el('kpiVisible').textContent=fmt.format(state.filtered.length); el('kpiComplete').textContent=pct(avg); el('tableMeta').textContent=`Showing ${state.filtered.length?fmt.format(start+1):0}-${fmt.format(Math.min(start+size,state.filtered.length))} of ${fmt.format(state.filtered.length)}`; el('pageInfo').textContent=`Page ${state.page} of ${pages}`; el('thead').innerHTML='<tr>'+cols.map(c=>`<th>${c==='_Completeness'?'Completeness':esc(c)}</th>`).join('')+'</tr>'; el('tbody').innerHTML=rows.map(r=>'<tr>'+cols.map(c=>`<td class="${c==='Material'?'material':''}">${c==='_Completeness'?'<span class="score">'+dot(r[c])+'</span>':esc(r[c])}</td>`).join('')+'</tr>').join('');}
+function reset(){['search','matType','matGroup','supplier'].forEach(id=>el(id).value=''); el('minComp').value='0'; state.page=1; selectPlant('4123');}
 function csvEscape(v){return `"${String(v??'').replace(/"/g,'""')}"`}
 function downloadCsv(){const header=cols.filter(c=>c!=='_Completeness').concat(['Completeness']); const lines=[header.join(',')].concat(state.filtered.map(r=>header.map(h=>csvEscape(h==='Completeness'?pct(r._Completeness):r[h])).join(','))); saveCsv(lines,'PFEP_Filtered_View.csv');}
-function downloadFullCsv(){const header=state.data.columns; const lines=[header.map(csvEscape).join(',')].concat(state.data.records.map(r=>header.map(h=>csvEscape(r[h])).join(','))); saveCsv(lines,'PFEP_Master_Static.csv');}
-function saveCsv(lines,name){const blob=new Blob([lines.join('
-')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href);}
-init().catch(e=>{el('tableMeta').textContent='Unable to load PFEP data'; console.error(e);});
+async function downloadFullCsv(){for(const p of state.meta.plants) await loadPlant(p); const all=state.meta.plants.flatMap(p=>state.recordsByPlant[p]||[]); const header=state.meta.columns; const lines=[header.map(csvEscape).join(',')].concat(all.map(r=>header.map(h=>csvEscape(r[h])).join(','))); saveCsv(lines,'PFEP_Master_Static.csv');}
+function saveCsv(lines,name){const blob=new Blob([lines.join('\n')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href);}
+init().catch(e=>{el('tableMeta').textContent=`Unable to load PFEP data: ${e.message}`; console.error(e);});
 </script>
 </body>
 </html>
+
+
 
 
 
