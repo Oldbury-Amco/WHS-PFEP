@@ -69,16 +69,13 @@ const cols=['Material','Plant','Part Description','Material Type','Material Type
 const el=id=>document.getElementById(id); const esc=v=>String(v??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 function pct(v){return `${Math.round((Number(v)||0)*100)}%`}
 function dot(v){v=Number(v)||0; return `<span class="dot ${v<.5?'red':v<.75?'amber':''}"></span>${pct(v)}`}
-async function loadCompressedData(){
-  const res=await fetch(`data/pfep_data.json.gz.b64?ts=${Date.now()}`,{cache:'no-store'});
-  const b64=(await res.text()).trim();
-  const bin=atob(b64); const bytes=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  if(!('DecompressionStream' in window)) throw new Error('This browser cannot decompress the PFEP data file. Use current Microsoft Edge or Chrome.');
-  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  return JSON.parse(await new Response(stream).text());
+async function init(){
+  const res=await fetch(`data/pfep_data.json?ts=${Date.now()}`,{cache:'no-store'});
+  if(!res.ok) throw new Error(`PFEP data file not found: ${res.status}`);
+  state.data=await res.json();
+  hydrate();
+  applyFilters();
 }
-async function init(){state.data=await loadCompressedData(); hydrate(); applyFilters();}
 function hydrate(){const d=state.data; el('kpiRecords').textContent=fmt.format(d.total_records); el('kpiPlants').textContent=d.plants.length; el('kpiGenerated').textContent=d.generated_at; el('plantButtons').innerHTML=['',...d.plants].map(p=>`<button data-plant="${esc(p)}" class="${p===''?'active':''}">${p||'All'}</button>`).join(''); el('plantButtons').onclick=e=>{if(e.target.tagName==='BUTTON'){state.plant=e.target.dataset.plant; [...el('plantButtons').children].forEach(b=>b.classList.toggle('active',b===e.target)); state.page=1; applyFilters();}}; fillSelect('matType',d.material_types); fillSelect('matGroup',d.material_groups); fillSelect('supplier',d.suppliers); el('plantSummary').innerHTML=d.plant_summary.map(p=>`<div class="mini-row"><span>${p.Plant}</span><strong>${fmt.format(p.Records)}</strong></div><div class="bar"><span style="width:${Math.round(p.Completeness*100)}%"></span></div>`).join(''); el('gapSummary').innerHTML=d.field_gaps.map(g=>`<div class="mini-row"><span>${esc(g.Field)}</span><strong>${fmt.format(g.Missing)}</strong></div><div class="bar warn"><span style="width:${Math.round(g.Completeness*100)}%"></span></div>`).join(''); ['search','matType','matGroup','supplier','minComp','pageSize'].forEach(id=>el(id).addEventListener('input',()=>{state.page=1;applyFilters();})); el('resetBtn').onclick=reset; el('prevBtn').onclick=()=>{if(state.page>1){state.page--;render();}}; el('nextBtn').onclick=()=>{const pages=Math.ceil(state.filtered.length/Number(el('pageSize').value)); if(state.page<pages){state.page++;render();}}; el('csvBtn').onclick=downloadCsv; el('fullCsvBtn').onclick=downloadFullCsv;}
 function fillSelect(id,items){const s=el(id); items.forEach(x=>{const o=document.createElement('option'); o.value=x; o.textContent=x; s.appendChild(o);});}
 function applyFilters(){const q=el('search').value.trim().toLowerCase(), mt=el('matType').value, mg=el('matGroup').value, sup=el('supplier').value, min=Number(el('minComp').value); state.filtered=state.data.records.filter(r=>{if(state.plant&&String(r.Plant)!==state.plant)return false; if(mt&&r['Material Type']!==mt)return false; if(mg&&r['Material Group']!==mg)return false; if(sup&&r['Supplier Name']!==sup)return false; if(Number(r._Completeness||0)<min)return false; if(q){const hay=[r.Material,r['Part Description'],r['Supplier Name'],r['Material Group Description']].join(' ').toLowerCase(); if(!hay.includes(q))return false;} return true;}); render();}
@@ -93,4 +90,6 @@ init().catch(e=>{el('tableMeta').textContent='Unable to load PFEP data'; console
 </script>
 </body>
 </html>
+
+
 
