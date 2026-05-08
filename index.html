@@ -76,8 +76,9 @@
   </div>
 </main>
 <script>
-const state={meta:null,recordsByPlant:{},filtered:[],page:1,plant:'4123'};
+const state={meta:null,recordsByPlant:{},filtered:[],page:1,plant:'4123',rendered:0};
 const fmt=new Intl.NumberFormat('en-GB');
+const rowBatch=350;
 const cols=['Material','Plant','Part Description','Bumper Part','Bumper Colour','Bumper Variant','Material Type Display','Material Group Display','Base UoM','MRP Type','Procurement type','Storage Locations','Vendor','Supplier Name','Procurement Plant','Safety stock','Reorder Point','Packaging Type','Container Qty','Replenishment Method','PFEP Owner','_Completeness'];
 const opsFields=['Supplier Name','Procurement Plant','Safety stock','Reorder Point','Packaging Type','Container Qty','Replenishment Method','PFEP Owner'];
 const el=id=>document.getElementById(id);
@@ -100,7 +101,7 @@ function hydrateMeta(){
   el('plantButtons').onclick=e=>{if(e.target.tagName==='BUTTON') selectPlant(e.target.dataset.plant)};
   fillSelect('matType',d.material_type_options || d.material_types); fillSelect('matGroup',d.material_group_options || d.material_groups); fillSelect('supplier',d.suppliers); fillSelect('bumperPart',d.bumper_parts || []); fillSelect('bumperColour',d.bumper_colours || []); fillSelect('bumperVariant',d.bumper_variants || []);
   ['search','matType','matGroup','supplier','bumperPart','bumperColour','bumperOnly','bumperVariant','minComp'].forEach(id=>el(id).addEventListener('input',()=>{state.page=1;applyFilters();}));
-  el('resetBtn').onclick=reset; el('csvBtn').onclick=downloadCsv; el('fullCsvBtn').onclick=downloadFullCsv;
+  el('resetBtn').onclick=reset; el('csvBtn').onclick=downloadCsv; el('fullCsvBtn').onclick=downloadFullCsv; document.querySelector('.table-wrap').addEventListener('scroll',loadMoreRows);
 }
 async function loadPlant(plant){
   if(state.recordsByPlant[plant]) return state.recordsByPlant[plant];
@@ -124,7 +125,10 @@ function applyFilters(){const q=el('search').value.trim().toLowerCase(), mt=el('
 function displayValue(r,c){if(c==='Material Type Display') return [r['Material Type'],r['Material Type Description']].filter(Boolean).join(' - '); if(c==='Material Group Display') return [r['Material Group'],r['Material Group Description']].filter(Boolean).join(' - '); return r[c];}
 function displayHeader(c){return c==='Material Type Display'?'Material Type':c==='Material Group Display'?'Material Group':c==='_Completeness'?'Completeness':c}
 function renderStatus(avg){const deg=Math.round(avg*360); el('completeDonut').style.background=`conic-gradient(var(--whs) ${deg}deg,#e4ebf0 0deg)`; el('donutValue').textContent=pct(avg); const byPlant={}; state.filtered.forEach(r=>{(byPlant[r.Plant] ||= []).push(Number(r._Completeness)||0)}); el('plantSummary').innerHTML=(state.meta.plants||[]).map(p=>{const rows=byPlant[p]||[], plantAvg=rows.reduce((s,v)=>s+v,0)/(rows.length||1); return `<div class="bar-label"><span>${p}</span><strong>${pct(plantAvg)} · ${fmt.format(rows.length)} rows</strong></div><div class="bar"><span style="width:${Math.round(plantAvg*100)}%"></span></div>`}).join(''); const total=state.filtered.length||1; const withSupplier=state.filtered.filter(r=>String(r['Supplier Name']??'').trim()).length; const withProcPlant=state.filtered.filter(r=>String(r['Procurement Plant']??'').trim()).length; const withPackaging=state.filtered.filter(r=>String(r['Packaging Type']??'').trim()&&String(r['Container Qty']??'').trim()).length; const withReplen=state.filtered.filter(r=>String(r['Replenishment Method']??'').trim()).length; const metrics=[['Supplier set',withSupplier/total],['Proc plant set',withProcPlant/total],['Packaging set',withPackaging/total],['Replenishment set',withReplen/total]]; el('opsSummary').innerHTML=metrics.map(([label,val])=>`<div class="ops-metric"><strong>${pct(val)}</strong><span>${label}</span></div>`).join('');}
-function render(){const rows=state.filtered; const avg=rows.reduce((s,r)=>s+Number(r._Completeness||0),0)/(rows.length||1); el('kpiVisible').textContent=fmt.format(rows.length); el('kpiComplete').textContent=pct(avg); renderStatus(avg); el('tableMeta').textContent=`Showing ${fmt.format(rows.length)} rows`; el('thead').innerHTML='<tr>'+cols.map(c=>`<th>${esc(displayHeader(c))}</th>`).join('')+'</tr>'; el('tbody').innerHTML=rows.map(r=>'<tr>'+cols.map(c=>`<td class="${c==='Material'?'material':''}">${c==='_Completeness'?'<span class="score">'+dot(r[c])+'</span>':esc(displayValue(r,c))}</td>`).join('')+'</tr>').join('');}
+function rowHtml(r){return '<tr>'+cols.map(c=>`<td class="${c==='Material'?'material':''}">${c==='_Completeness'?'<span class="score">'+dot(r[c])+'</span>':esc(displayValue(r,c))}</td>`).join('')+'</tr>'}
+function appendRows(){const next=state.filtered.slice(state.rendered,state.rendered+rowBatch); if(!next.length)return; el('tbody').insertAdjacentHTML('beforeend',next.map(rowHtml).join('')); state.rendered+=next.length; el('tableMeta').textContent=`Showing ${fmt.format(state.rendered)} of ${fmt.format(state.filtered.length)} rows`;}
+function loadMoreRows(e){const wrap=e.currentTarget; if(wrap.scrollTop+wrap.clientHeight>wrap.scrollHeight-500) appendRows();}
+function render(){const rows=state.filtered; const avg=rows.reduce((s,r)=>s+Number(r._Completeness||0),0)/(rows.length||1); el('kpiVisible').textContent=fmt.format(rows.length); el('kpiComplete').textContent=pct(avg); renderStatus(avg); state.rendered=0; el('thead').innerHTML='<tr>'+cols.map(c=>`<th>${esc(displayHeader(c))}</th>`).join('')+'</tr>'; el('tbody').innerHTML=''; appendRows();}
 function reset(){['search','matType','matGroup','supplier','bumperPart','bumperColour','bumperOnly','bumperVariant'].forEach(id=>el(id).value=''); el('minComp').value='0'; state.page=1; selectPlant('4123');}
 function csvEscape(v){return `"${String(v??'').replace(/"/g,'""')}"`}
 function downloadCsv(){const fields=cols.filter(c=>c!=='_Completeness'); const header=fields.map(displayHeader).concat(['Completeness']); const lines=[header.map(csvEscape).join(',')].concat(state.filtered.map(r=>fields.map(c=>csvEscape(displayValue(r,c))).concat(csvEscape(pct(r._Completeness))).join(','))); saveCsv(lines,'PFEP_Filtered_View.csv');}
